@@ -22,15 +22,6 @@ class S(BaseHTTPRequestHandler):
     #   self.send_header('Content-type', 'application/json')
         self.end_headers()
 
-    def _do_redirect(self, location='http://localhost:8080/redirect'):
-        if self.path == '/redirect':
-            self._set_headers()
-        else:
-            self.protocol_version = self.request_version
-            self.send_response(301)
-            self.send_header('Location', location)  # e.g. 'http://www.google.co.jp'
-            self.end_headers()
-
     def _print_request_header(self):
         d = datetime.datetime.today()
         print'================================================================================'
@@ -38,6 +29,17 @@ class S(BaseHTTPRequestHandler):
         print self.requestline
         print
         print self.headers
+
+    def _do_redirect(self, location='http://localhost:8080/redirect'):
+        if self.path.startswith('/redirect'):
+            self._set_headers()
+        else:
+            redirect_path = '/redirect' + self.path
+            location = 'http://127.0.0.1:8080{0}'.format(redirect_path)
+            self.protocol_version = self.request_version
+            self.send_response(301)
+            self.send_header('Location', location)  # e.g. 'http://www.google.co.jp'
+            self.end_headers()
 
     def do_GET(self):
         self._print_request_header()
@@ -52,9 +54,10 @@ class S(BaseHTTPRequestHandler):
     def do_POST(self):
         # Doesn't do anything with posted data
         self._print_request_header()
-        content_length = int(self.headers['Content-Length'])
-        post_data = self.rfile.read(content_length)
-        print post_data
+        if 'Content-Length' in self.headers :
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            print post_data
         self._set_headers()
 
 
